@@ -7,7 +7,7 @@ import { SECCIONES } from '../data/videos';
  * TODO backend: reemplazar el mock por
  *   fetch(`${API_URL}/videos`, { headers: { Authorization: `Bearer ${token}` } })
  *
- * Endpoint: GET /api/videos
+ * Endpoint: GET /api/videos  (request() de api.js añade solo Authorization: Bearer <token>)
  * Respuesta esperada (200): lista plana de videos, cada uno con:
  * {
  *   "id": "v1", "seccion": "onboarding" | "comunicados" | "cursos",

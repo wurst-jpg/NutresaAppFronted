@@ -1,3 +1,5 @@
+import { loadToken } from '../utils/storage';
+
 // Punto único de comunicación con el backend.
 // La URL base viene de la variable de entorno VITE_API_URL (ver .env.example).
 export const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8080/api';
@@ -17,18 +19,37 @@ export class ApiError extends Error {
 export const simulateLatency = (ms = mockConfig.delay) =>
   new Promise((resolve) => setTimeout(resolve, ms));
 
-// Helper para cuando conectes el backend real: hace fetch con JSON y
-// lanza ApiError si la respuesta no es 2xx.
+// Helper para cuando conectes el backend real: hace fetch con JSON, añade
+// Authorization: Bearer <token> si hay sesión, y lanza ApiError si falla.
 // TODO backend: úsalo desde authService.js y videoService.js, por ejemplo
 //   request('/usuarios', { method: 'POST', body: JSON.stringify(usuario) })
 export async function request(path, options = {}) {
-  const response = await fetch(`${API_URL}${path}`, {
-    headers: { 'Content-Type': 'application/json', ...options.headers },
-    ...options,
-  });
-  if (!response.ok) {
-    const body = await response.json().catch(() => ({}));
-    throw new ApiError(body.message ?? 'Error de servidor', response.status);
+  const token = loadToken();
+  let response;
+  try {
+    response = await fetch(`${API_URL}${path}`, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...options.headers,
+      },
+    });
+  } catch {
+    throw new ApiError('No se pudo conectar con el servidor', 0);
   }
-  return response.status === 204 ? null : response.json();
+
+  const text = await response.text();
+  let data = null;
+  if (text) {
+    try {
+      data = JSON.parse(text);
+    } catch {
+      data = null;
+    }
+  }
+  if (!response.ok) {
+    throw new ApiError(data?.message ?? 'Error de servidor', response.status);
+  }
+  return data;
 }

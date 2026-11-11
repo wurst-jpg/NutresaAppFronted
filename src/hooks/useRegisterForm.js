@@ -48,10 +48,10 @@ export default function useRegisterForm() {
 
       setSubmitting(true);
       try {
-        const user = await authService.register(values);
-        signIn(user);
-        showToast(`¡Cuenta creada con éxito! Bienvenido/a, ${user.nombre}.`);
-        navigate('/home');
+        const session = await authService.register(values);
+        signIn(session);
+        showToast(`¡Cuenta creada con éxito! Bienvenido/a, ${session.usuario.nombre}.`);
+        navigate('/home', { replace: true });
       } catch (error) {
         if (error.status === 409) setErrors((prev) => ({ ...prev, correo: error.message }));
         else setSubmitError(error.message || 'No se pudo completar el registro.');

@@ -25,9 +25,9 @@ export default function LoginForm() {
 
     setSubmitting(true);
     try {
-      const user = await authService.login(values);
-      signIn(user);
-      navigate('/home');
+      const session = await authService.login(values);
+      signIn(session);
+      navigate('/home', { replace: true });
     } catch (error) {
       setSubmitError(error.message || 'No se pudo iniciar sesión.');
       setSubmitting(false);

@@ -16,6 +16,8 @@ export default function HomePage() {
   const navigate = useNavigate();
 
   const [secciones, setSecciones] = useState(null);
+  const [loadError, setLoadError] = useState('');
+  const [reloadKey, setReloadKey] = useState(0);
   const [query, setQuery] = useState('');
   const [departamento, setDepartamento] = useState('');
   const [activeSection, setActiveSection] = useState('inicio');
@@ -24,17 +26,24 @@ export default function HomePage() {
 
   useEffect(() => {
     let cancelled = false;
-    videoService.getCatalog().then((data) => {
-      if (!cancelled) setSecciones(data);
-    });
+    setLoadError('');
+    setSecciones(null);
+    videoService
+      .getCatalog()
+      .then((data) => {
+        if (!cancelled) setSecciones(data);
+      })
+      .catch((error) => {
+        if (!cancelled) setLoadError(error.message || 'No se pudieron cargar los videos.');
+      });
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [reloadKey]);
 
   const handleLogout = () => {
     signOut();
-    navigate('/login');
+    navigate('/login', { replace: true });
   };
   const closeModal = useCallback(() => setSelected(null), []);
 
@@ -68,7 +77,18 @@ export default function HomePage() {
         <main className="min-w-0 flex-1 space-y-8 p-4 sm:p-6">
           {showHero && <HeroBanner video={HERO_VIDEO} onPlay={setSelected} />}
 
-          {secciones === null ? (
+          {loadError ? (
+            <div role="alert" className="space-y-3 rounded-lg border border-red-500/50 bg-red-950/40 p-6 text-center">
+              <p className="text-red-300">{loadError}</p>
+              <button
+                type="button"
+                onClick={() => setReloadKey((k) => k + 1)}
+                className="rounded-md bg-indigo-500 px-4 py-2 font-semibold text-white hover:bg-indigo-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
+              >
+                Reintentar
+              </button>
+            </div>
+          ) : secciones === null ? (
             <div className="flex items-center justify-center gap-2 py-16 text-slate-300" role="status">
               <Spinner className="h-6 w-6" /> Cargando videos…
             </div>

@@ -1,5 +1,7 @@
 import { ApiError, simulateLatency } from './api';
 
+const MOCK_TOKEN = 'mock-token';
+
 // Correo que el mock trata como "ya registrado" para poder ver ese error.
 export const DEMO_TAKEN_EMAIL = 'existente@empresa.com';
 
@@ -19,7 +21,7 @@ export const DEMO_TAKEN_EMAIL = 'existente@empresa.com';
  *   "departamento": "FINANZAS",      // TECNOLOGIA | RECURSOS_HUMANOS | MARKETING | FINANZAS | OPERACIONES
  *   "contrasenia": "secreta1!"       // el backend la convierte en contrasenia_hash (BCrypt)
  * }
- * Respuesta esperada (201): { "id": "uuid", "nombre", "correo", "rol", "departamento" }
+ * Respuesta esperada (201): { "token": "<JWT>", "usuario": { "id": "uuid", "nombre", "correo", "rol", "departamento" } }
  * Si el correo existe: 409 con { "message": "Este correo ya está registrado." }
  */
 export async function register({ nombre, correo, rol, departamento }) {
@@ -28,11 +30,14 @@ export async function register({ nombre, correo, rol, departamento }) {
     throw new ApiError('Este correo ya está registrado.', 409);
   }
   return {
-    id: crypto.randomUUID(),
-    nombre: nombre.trim(),
-    correo: correo.trim().toLowerCase(),
-    rol,
-    departamento,
+    token: MOCK_TOKEN,
+    usuario: {
+      id: crypto.randomUUID(),
+      nombre: nombre.trim(),
+      correo: correo.trim().toLowerCase(),
+      rol,
+      departamento,
+    },
   };
 }
 
@@ -64,11 +69,14 @@ export async function login({ correo, contrasenia }) {
     .map((p) => p[0].toUpperCase() + p.slice(1))
     .join(' ');
   return {
-    id: crypto.randomUUID(),
-    nombre,
-    correo: email,
-    rol: 'COLABORADOR',
-    departamento: 'TECNOLOGIA',
+    token: MOCK_TOKEN,
+    usuario: {
+      id: crypto.randomUUID(),
+      nombre,
+      correo: email,
+      rol: 'COLABORADOR',
+      departamento: 'TECNOLOGIA',
+    },
   };
 }
 
